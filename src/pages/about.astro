@@ -1,0 +1,23 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="About" description="What this site is and how the experiments are reported.">
+  <h1>About</h1>
+  <div class="prose">
+    <p>
+      I build products with teams of AI agents, and I keep running into the same question: how do you hand
+      work to an agent and get back what you meant? This site is where I write up what I try.
+    </p>
+    <p>Three rules for every post:</p>
+    <ul>
+      <li>Show the experiment, not only the conclusion. Where I can, the post links the thing itself.</li>
+      <li>Say how big the test was. One run is a hint, not a result.</li>
+      <li>Say where the result stops being true.</li>
+    </ul>
+  </div>
+</Base>
+
+<style>
+  h1 { font-size: clamp(30px, 5.5vw, 44px); letter-spacing: -0.02em; margin: 0 0 16px; }
+  .prose { font-family: var(--f-read); font-size: 19px; line-height: 1.6; }
+</style>

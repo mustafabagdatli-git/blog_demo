@@ -1,0 +1,91 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "Experiments in building with AI agents." } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteName = "AI Experiments";
+const pageTitle = title === siteName ? title : `${title} · ${siteName}`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="alternate" type="application/rss+xml" title={siteName} href={`${base}/rss.xml`} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap"
+    />
+  </head>
+  <body>
+    <header class="site">
+      <a class="name" href={`${base}/`}>{siteName}</a>
+      <nav>
+        <a href={`${base}/`}>Posts</a>
+        <a href={`${base}/about/`}>About</a>
+        <a href={`${base}/rss.xml`}>RSS</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site">
+      <p>Notes from experiments in building with AI agents. Every result here names its limits.</p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  /* Same type system as the Hello, Process experiment: a serif for reading, a
+     grotesque for the frame, a mono for labels and data. */
+  :root {
+    --bg: #f4f4ef; --surface: #fbfbf8; --line: #d9dbd4; --fg: #151719; --muted: #5b625e;
+    --accent: #2b44e0; --accent-soft: #e3e7ff;
+    --f-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-read: "Newsreader", Georgia, "Times New Roman", serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1110; --surface: #171a19; --line: #2b302e; --fg: #e6e9e7; --muted: #9aa29e;
+      --accent: #8c9cff; --accent-soft: #1d2342;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1110; --surface: #171a19; --line: #2b302e; --fg: #e6e9e7; --muted: #9aa29e;
+    --accent: #8c9cff; --accent-soft: #1d2342;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: var(--f-ui); font-size: 16px; line-height: 1.5;
+  }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  header.site, main, footer.site { max-width: 720px; margin: 0 auto; padding-inline: 16px; }
+  header.site {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+    gap: 8px 24px; padding-block: 24px 16px; border-bottom: 1px solid var(--line);
+  }
+  header.site .name { font-weight: 700; color: var(--fg); text-decoration: none; letter-spacing: -0.01em; }
+  header.site nav { display: flex; gap: 16px; font-size: 14px; }
+  header.site nav a { color: var(--muted); text-decoration: none; }
+  header.site nav a:hover { color: var(--fg); }
+  main { padding-block: 32px 48px; }
+  footer.site { border-top: 1px solid var(--line); padding-block: 16px 40px; color: var(--muted); font-size: 13px; }
+  .label {
+    font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+</style>

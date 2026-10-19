@@ -1,0 +1,39 @@
+{
+  "experiment": "Four agents read the same story (score) on their own and say what gate they would build",
+  "run_date": "2026-10-19",
+  "score_file": "ls-claim-003-score.txt",
+  "setup": "Each performer got only the story text and its acceptance criteria (no hindsight, no repository access, no tools) and had to state the exact rule its gate would use, plus every phrase it had to interpret.",
+  "ground_truth": "LS-CLAIM-004, written about an hour after LS-CLAIM-003 shipped, found that the shipped gate counted a file as safe if it merely MENTIONED finish_reason or refusal. False pass: runPlanner.ts mentions them only in comments. False fail: specCritiqueCaller.ts handles refusals correctly without naming either field.",
+  "performances": [
+    {
+      "performer": "A, the literalist (run 1)",
+      "blind_predicate": "Grep the file for the literal identifiers finish_reason or refusal. Zero matches = blind. Any match = not blind, even if it does nothing with it.",
+      "matches_shipped_rule": true
+    },
+    {
+      "performer": "A, the literalist (run 2, noise control)",
+      "blind_predicate": "Blind if the text contains neither token outside // comment lines (grep -wq after removing comment lines).",
+      "matches_shipped_rule": false
+    },
+    {
+      "performer": "C, the shipper",
+      "blind_predicate": "After dropping comment lines, blind if no match for finish_reason|finishReason|.refusal|'refusal'. One real code reference is enough.",
+      "matches_shipped_rule": false
+    },
+    {
+      "performer": "B, the auditor",
+      "blind_predicate": "Strip comments. Not blind only if the code contains an actual property read of either field (or calls an allowlisted guard helper). Comments, type declarations and string literals do not count.",
+      "matches_shipped_rule": false,
+      "extra_choices": [
+        "Fail when the blind count drops below the baseline too, forcing the baseline down",
+        "Also assert the total number of callers, so a pattern that stops matching cannot pass with 0 blind"
+      ]
+    }
+  ],
+  "caught": "The split landed on the phrase that broke ('read'/'inspect'). 3 of 4 runs avoided the false pass that shipped.",
+  "missed": "No run caught the false fail. All four accepted the story's assumption that 'safe' means 'mentions the field'.",
+  "limits": [
+    "n = 1 story. This cannot tell a working method from a lucky one.",
+    "The two runs of the same performer disagreed with each other on the same phrase, so part of the divergence is noise, not interpretation."
+  ]
+}
