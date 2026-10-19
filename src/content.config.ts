@@ -11,6 +11,17 @@ const posts = defineCollection({
     tags: z.array(z.string()).default([]),
     // An experiment a reader can open and run, served from public/experiments/.
     experiment: z.string().optional(),
+    // The facts of the run, shown as a card at the top of the post. Leave a field
+    // out when it is unknown: the card says "not recorded" rather than guessing.
+    run: z
+      .object({
+        date: z.coerce.date().optional(),
+        models: z.string().optional(),
+        setup: z.string().optional(),
+        result: z.string().optional(),
+        cost: z.string().optional(),
+      })
+      .optional(),
   }),
 });
 
