@@ -1,0 +1,38 @@
+{
+  "experiment": "Four agents read the same story (score) on their own and say what check they would build",
+  "run_date": "2026-10-19",
+  "setup": "Each performer got only the story text and its acceptance criteria (no hindsight, no code, no tools) and had to state the exact rule its check would use, plus every phrase it had to interpret. The story text is not published because it comes from a private codebase.",
+  "ground_truth": "A follow-up story, written about an hour after the original shipped, found that the shipped check counted a file as safe if it merely MENTIONED the provider's refusal signal. False pass: a file that mentions it only in comments. False fail: a file that handles refusals correctly without naming the signal at all.",
+  "performances": [
+    {
+      "performer": "A, the literalist (run 1)",
+      "reading_rule": "Search the file for the literal names of the signal. No match = blind. Any match = not blind, even if it does nothing with it.",
+      "matches_shipped_rule": true
+    },
+    {
+      "performer": "A, the literalist (run 2, noise control)",
+      "reading_rule": "Blind if the names appear nowhere outside comment lines.",
+      "matches_shipped_rule": false
+    },
+    {
+      "performer": "C, the shipper",
+      "reading_rule": "After dropping comment lines, blind if there is no code reference to either name. One real reference is enough.",
+      "matches_shipped_rule": false
+    },
+    {
+      "performer": "B, the auditor",
+      "reading_rule": "Strip comments. Not blind only if the code actually reads the field. Comments, type declarations and strings do not count.",
+      "matches_shipped_rule": false,
+      "extra_choices": [
+        "Fail when the blind count drops below the baseline too, forcing the baseline down",
+        "Also check the total number of callers, so a pattern that stops matching cannot pass with 0 blind"
+      ]
+    }
+  ],
+  "caught": "The split landed on the phrase that broke ('read'/'inspect'). 3 of 4 runs avoided the false pass that shipped.",
+  "missed": "No run caught the false fail. All four accepted the story's assumption that 'safe' means 'mentions the signal'.",
+  "limits": [
+    "n = 1 story. This cannot tell a working method from a lucky one.",
+    "The two runs of the same performer disagreed with each other on the same phrase, so part of the divergence is noise, not interpretation."
+  ]
+}

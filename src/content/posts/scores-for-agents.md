@@ -4,6 +4,10 @@ description: "Reas writes a short text and lets independent elements perform it.
 date: 2026-10-19
 tags: ["agents", "method", "casey reas"]
 experiment: "hello-process.html"
+run:
+  date: 2026-10-19
+  setup: "Four agents read one user story with no code and no tools, and each stated the rule it would build. One agent ran twice as a noise control."
+  result: "They split on the phrase that later broke. 3 of 4 avoided the bug that shipped; none caught the second bug. One story, so a hint, not a result."
 ---
 
 Years ago I saw Casey Reas talk at Medialab-Prado in Madrid. What stayed with me was not an image. It was his way of working: he doesn't draw the picture. He writes a short text, a *score*, and lets software perform it.
@@ -40,7 +44,7 @@ Reas fills in something that management writing misses. He treats each element a
 
 I wanted to know whether Reas's method finds real gaps in a real spec. So I picked a case where I already knew the answer.
 
-In my product, loopstr, we write a short user story before we build anything. One story, LS-CLAIM-003, described a CI check that counts code which "never reads" a provider's refusal signal. It shipped. An hour later a follow-up story had to correct it: the check counted a file as safe if it merely *mentioned* the signal, even in a comment.
+In the product I'm building, we write a short user story before we build anything. One story described a CI check that counts code which "never reads" the signal a model provider sends when it refuses a request. It shipped. An hour later a follow-up story had to correct it: the check counted a file as safe if it merely *mentioned* the signal, even in a comment.
 
 I gave four agents only the story's text: no code, no hindsight, no tools. Like Reas's performers, three had different temperaments: a **literalist**, an **auditor** and a **shipper**. The fourth was the literalist run a second time, as a control for plain randomness. Each had to state the exact rule its check would use, and quote every phrase where it had to make a choice.
 
@@ -57,7 +61,7 @@ I gave four agents only the story's text: no code, no hindsight, no tools. Like 
 
 Four runs, three different rules, all on the exact phrase that later broke. Three of the four avoided the bug that shipped. The auditor also raised two things nobody had written down: whether the check should fail when the count goes *down*, and whether it should check the total so it can't pass by matching nothing.
 
-The score and every performance are here: [the score](../../data/ls-claim-003-score.txt) and [the four performances](../../data/ls-claim-003-performances.json).
+The four performances are here: [what each agent decided](../../data/spec-performances.json). I've left out the story text itself, because it comes from a private codebase.
 
 ### What it did not show
 
