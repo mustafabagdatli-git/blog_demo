@@ -1,0 +1,1010 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hello, Process</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Layout: the score sits on the left because the text is primary; three performances fill the stage; the tuning desk sits underneath. */
+:root{
+  --bg:#eceeec; --surface:#f8f9f7; --line:#d3d8d4; --fg:#151719; --muted:#59605d;
+  --accent:#2b44e0; --accent-ink:#ffffff; --accent-soft:#e3e7ff;
+  --good:#1d7449; --bad:#b0352b;
+  --paper:#f4f4ef; --ink:#141414;
+  --f-ui:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-score:"Newsreader", Georgia, "Times New Roman", serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1110; --surface:#171a19; --line:#2b302e; --fg:#e6e9e7; --muted:#9aa29e;
+    --accent:#8c9cff; --accent-ink:#0c0f1c; --accent-soft:#1d2342;
+    --good:#5fc690; --bad:#ef7b70; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1110; --surface:#171a19; --line:#2b302e; --fg:#e6e9e7; --muted:#9aa29e;
+  --accent:#8c9cff; --accent-ink:#0c0f1c; --accent-soft:#1d2342;
+  --good:#5fc690; --bad:#ef7b70; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+.wrap{max-width:1360px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:20px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.top h1{margin:0;font-weight:700;font-size:clamp(26px,3.4vw,38px);letter-spacing:-.02em;line-height:1}
+.top h1 em{font-family:var(--f-score);font-style:italic;font-weight:400;letter-spacing:0}
+.top p{margin:6px 0 0;color:var(--muted);max-width:62ch;text-wrap:pretty}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 12px;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.small{padding:4px 8px;font-size:12px}
+.note{font-size:12px;color:var(--muted)}
+
+.main{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;gap:8px}
+.score-col{display:grid;gap:18px;min-width:0}
+.score-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px}
+#score{width:100%;min-height:150px;resize:vertical;border:0;background:transparent;font-family:var(--f-score);font-size:21px;line-height:1.35;padding:0}
+#score:focus-visible{outline:none}
+.score-box:focus-within{border-color:var(--accent)}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.chip{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;background:var(--accent-soft);border-radius:6px;padding:6px 8px;font-size:13px}
+.chip.open{background:transparent;border:1px dashed var(--line)}
+.chip q{font-family:var(--f-score);font-style:italic;font-size:15px}
+.x{border:0;background:transparent;color:var(--muted);padding:0 2px;font-size:15px;line-height:1}
+.x:hover{color:var(--bad)}
+.empty{color:var(--muted);font-size:12px;margin:0}
+.lib{font-family:var(--f-mono);font-size:12px;margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.lib dt{color:var(--muted)}
+.lib dd{margin:0}
+
+.stage{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:14px;min-width:0}
+.perf{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px;min-width:0;align-content:start}
+.perf-head{display:flex;align-items:baseline;gap:8px}
+.letter{font-family:var(--f-mono);font-weight:500;font-size:12px;border:1px solid var(--fg);border-radius:4px;padding:0 5px}
+.perf-head h3{margin:0;font-size:16px;font-weight:600}
+.perf-head .round{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+canvas{display:block;width:100%;aspect-ratio:1;max-width:100%;border-radius:4px;background:var(--paper)}
+.status{font-family:var(--f-mono);font-size:11px;color:var(--muted);min-height:2.9em}
+.cannot{color:var(--bad);margin-top:4px}
+#withme[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg .btn{border:0;border-radius:0;background:transparent}
+.seg .btn[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+iframe.sk{display:block;width:100%;aspect-ratio:1;max-width:100%;border:0;border-radius:4px;background:var(--paper)}
+details.code summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+details.code pre{margin:6px 0 0;max-height:240px;overflow:auto;font-family:var(--f-mono);font-size:11px;line-height:1.4;background:var(--bg);border-radius:4px;padding:8px;white-space:pre}
+.perf.you{border-style:dashed}
+.perf.you canvas{cursor:crosshair;touch-action:none}
+.row2{display:flex;flex-wrap:wrap;gap:6px}
+.row2 input{flex:1 1 120px;min-width:0;border:1px solid var(--line);border-radius:6px;background:transparent;padding:5px 8px;font-size:13px}
+.score-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.versions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.vchip{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);background:transparent;border-radius:4px;padding:2px 6px}
+.vchip[aria-current="true"]{border-color:var(--fg);font-weight:500}
+.fold{margin-top:8px;border:1px solid var(--accent);border-radius:8px;padding:10px;display:grid;gap:8px}
+.fold .new{font-family:var(--f-score);font-size:17px;line-height:1.35}
+.libitem{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px 8px;align-items:start;font-family:var(--f-mono);font-size:12px;padding:3px 0}
+.libitem .n{color:var(--muted);white-space:nowrap}
+.libitem input{margin:1px 0 0}
+.libel{font-family:var(--f-mono);font-size:12px;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.libel b{font-weight:500}
+.variety{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:12px;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.vbar{width:140px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.vbar i{display:block;height:100%;background:var(--accent)}
+.verdict .btn[aria-pressed="true"].surprising{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.count .s{color:var(--accent)}
+.toall{display:block;margin-top:2px;border:0;background:transparent;padding:0;font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.toall:hover{text-decoration:underline}
+.proposal .row{flex-wrap:wrap}
+.status.err{color:var(--bad)}
+.verdict{display:flex;gap:6px}
+.verdict .btn{flex:1}
+.verdict .btn[aria-pressed="true"].closer{background:var(--good);border-color:var(--good);color:var(--surface)}
+.verdict .btn[aria-pressed="true"].off{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.beh{display:grid;gap:4px}
+.beh li{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:start;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
+.beh li:first-child{border-top:0}
+.count{font-family:var(--f-mono);font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.count .u{color:var(--good)} .count .d{color:var(--bad)}
+.addb{display:flex;gap:6px}
+.addb input{flex:1;min-width:0;border:1px solid var(--line);border-radius:6px;background:transparent;padding:5px 8px;font-size:13px}
+
+.desk{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.desk{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.panel h2{margin:0 0 4px;font-size:17px;font-weight:600}
+.panel > p{margin:0 0 12px;color:var(--muted);font-size:13px;max-width:70ch}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px}
+th,td{text-align:left;vertical-align:top;padding:8px;border-top:1px solid var(--line)}
+th{font-family:var(--f-mono);font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;border-top:0}
+td.phrase{font-family:var(--f-score);font-style:italic;font-size:15px;width:22%}
+td .why{color:var(--muted);font-size:12px;margin-top:2px}
+td .pin{margin-top:6px}
+.badge{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 5px;background:var(--accent-soft);color:var(--fg)}
+.badge.pending{margin-left:6px;vertical-align:1px;background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.badge.open{background:transparent;border:1px dashed var(--muted)}
+#intent{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:6px;background:transparent;padding:8px;font-size:13px}
+.proposal{border:1px solid var(--line);border-radius:6px;padding:10px;display:grid;gap:6px;font-size:13px}
+.proposal .op{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.proposal .txt{font-weight:500}
+.proposal .row{display:flex;gap:6px}
+.stack{display:grid;gap:10px}
+.log{list-style:none;margin:0;padding:0;font-family:var(--f-mono);font-size:12px;display:grid;gap:4px;max-height:220px;overflow:auto}
+.log li{display:grid;grid-template-columns:3.2em 1fr;gap:8px}
+.log .r{color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Hello, <em>Process</em></h1>
+      <p>One score, three performers. Each performer reads the same text on its own and draws what it understood. Change how the Elements act in the Library, rewrite the score as a new Process, or tune each performer's sensibility.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="How performers work">
+        <button class="btn small" id="mode-machine" type="button" title="Performers set the values of a drawing machine built for them">Set the machine</button>
+        <button class="btn small" id="mode-code" type="button" title="Each performer writes its own program, like the artists in Software Structures">Write their own code</button>
+      </div>
+      <button class="btn small" id="withme" type="button" aria-pressed="false" title="Add yourself as a fourth performer who draws by hand">Include me</button>
+      <button class="btn primary" id="perform" type="button">Perform round 1</button>
+      <button class="btn" id="play" type="button" aria-pressed="true">Pause</button>
+      <button class="btn" id="reset" type="button">Reset</button>
+    </div>
+  </header>
+  <p class="note" id="live-note">Checking whether live performances are available…</p>
+
+  <div class="main">
+    <aside class="score-col">
+      <section>
+        <p class="label"><span id="proc-label">Process 1</span><span>edit freely</span></p>
+        <div class="score-box"><textarea id="score" spellcheck="false" aria-label="Score text"></textarea></div>
+        <div class="score-actions">
+          <button class="btn small" id="fold" type="button" title="Rewrite the score so the pinned readings become part of its prose">Fold pins into text</button>
+          <button class="btn small" id="saveproc" type="button">Save as Process 2</button>
+        </div>
+        <div id="foldbox"></div>
+        <div class="versions" id="versions"></div>
+      </section>
+      <section>
+        <p class="label"><span>Pinned</span><span>until folded into the text</span></p>
+        <ul class="list" id="pinned"></ul>
+      </section>
+      <section>
+        <p class="label"><span>Open on purpose</span><span>interpret freely</span></p>
+        <ul class="list" id="open"></ul>
+      </section>
+      <section>
+        <p class="label"><span>Library</span><span>how Elements act · shared by all</span></p>
+        <div id="library"></div>
+      </section>
+      <section id="gaps-sec">
+        <p class="label"><span>Machine can't do yet</span><span>from performers</span></p>
+        <ul class="list" id="gaps"></ul>
+        <div class="score-actions"><button class="btn small" id="copygaps" type="button">Copy for Claude</button><span class="note" id="copynote"></span></div>
+      </section>
+    </aside>
+
+    <section class="stage" id="stage" aria-label="Performances"></section>
+  </div>
+
+  <div class="desk">
+    <section class="panel">
+      <div class="variety" id="variety"></div>
+      <h2>Divergences</h2>
+      <p>Where the performers read the same words differently. Pin a reading to make the score tighter, or mark the words as open on purpose.</p>
+      <div class="tablewrap"><table id="div"></table></div>
+    </section>
+    <section class="stack">
+      <div class="panel">
+        <h2>Tune the performers</h2>
+        <p>Mark each performance Closer, Surprising or Off, say what you meant, then ask for changes. Changes to how Elements act go to the Library; changes to a performer's sensibility stay with that performer. Nothing changes until you accept it.</p>
+        <div class="stack">
+          <textarea id="intent" aria-label="What you meant" placeholder="What did you mean? For example: I wanted the overlaps to read as a slow drawing, not a flicker."></textarea>
+          <button class="btn primary" id="propose" type="button">Propose changes</button>
+          <div class="stack" id="proposals"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Log</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = "hello-process-v1";
+  const W = 600;
+  const DEFAULT_LIBRARY = () => ({
+    behaviors: [
+      { n: 1, text: "Move in a straight line" },
+      { n: 2, text: "Constrain to surface" },
+      { n: 3, text: "Change direction while touching another Element" },
+      { n: 4, text: "Move away from an overlapping Element" },
+    ],
+    uses: [1, 2, 3, 4],
+  });
+  const libraryText = (L) => ["Form 1: Circle", ...L.behaviors.map((b) => `Behavior ${b.n}: ${b.text}`),
+    `Element 1: Form 1${L.uses.slice().sort((a, b) => a - b).map((n) => " + Behavior " + n).join("")}`].join("\n");
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  const DEFAULT_SCORE = "A surface filled with twenty instances of Element 1. Draw a line between the centers of two Elements while they overlap.";
+
+  let uid = 0;
+  const bid = () => "b" + Date.now().toString(36) + (uid++);
+  const beh = (text, since = -1) => ({ id: bid(), text, up: 0, down: 0, since });
+
+  const PRESETS = {
+    A: { count: 20, sizeMin: 0.1, sizeMax: 0.18, speed: 1.2, edges: "bounce", turnOnTouch: true, repelOverlap: true, showCircles: "none", lines: "instant", lineWeight: 1.5, lineTone: "ink", ground: "paper",
+      notes: [
+        { phrase: "twenty", choice: "Exactly 20 Elements", why: "The number is stated." },
+        { phrase: "Draw a line", choice: "Only lines, redrawn every frame; circles hidden", why: "The score asks for lines and nothing else." },
+        { phrase: "while they overlap", choice: "A line exists only during the overlap", why: "Read as a live condition." },
+        { phrase: "A surface", choice: "Square, light ground; Elements bounce off edges", why: "Plainest reading of Behavior 2." } ] },
+    B: { count: 20, sizeMin: 0.1, sizeMax: 0.26, speed: 0.6, edges: "bounce", turnOnTouch: true, repelOverlap: true, showCircles: "faint", lines: "accumulate", lineWeight: 0.6, lineTone: "distance", ground: "paper",
+      notes: [
+        { phrase: "Draw a line", choice: "Lines accumulate into a drawing over time", why: "Time should leave traces." },
+        { phrase: "while they overlap", choice: "Each overlap adds to a lasting record", why: "The history of encounters is the image." },
+        { phrase: "Element 1", choice: "Larger, slow circles shown as faint ghosts", why: "A sense of life needs bodies, not only lines." },
+        { phrase: "twenty", choice: "20, sized so they meet often", why: "Encounters drive the drawing." } ] },
+    C: { count: 20, sizeMin: 0.14, sizeMax: 0.3, speed: 0.9, edges: "wrap", turnOnTouch: true, repelOverlap: false, showCircles: "outline", lines: "instant", lineWeight: 0.5, lineTone: "ink", ground: "ink",
+      notes: [
+        { phrase: "A surface", choice: "Dark ground; Elements wrap around the edges", why: "Fewer collisions with the frame keep the structure clear." },
+        { phrase: "Draw a line", choice: "Hairlines over thin circle outlines", why: "Show the structure, keep everything thin." },
+        { phrase: "while they overlap", choice: "Lines appear and vanish with each overlap", why: "Nothing extra is kept." },
+        { phrase: "Element 1", choice: "Behavior 4 off, so overlaps last longer", why: "Less correction, clearer structure." } ] },
+  };
+
+  function defaults() {
+    return {
+      score: DEFAULT_SCORE, pinned: [], open: [], round: 0, intent: "",
+      library: DEFAULT_LIBRARY(), process: 1, variety: [], mode: "machine",
+      human: { img: null, notes: [] },
+      versions: [{ n: 1, score: DEFAULT_SCORE, library: DEFAULT_LIBRARY(), pinned: [], open: [] }],
+      performers: [
+        { id: "A", name: "Literal", behaviors: ["Read every word exactly as written.", "When the score is silent, choose the plainest option.", "Draw only what the score asks for."].map((t) => beh(t)) },
+        { id: "B", name: "Lively", behaviors: ["Give the Elements a sense of life.", "Let time leave traces on the surface.", "Prefer slow, unhurried motion."].map((t) => beh(t)) },
+        { id: "C", name: "Spare", behaviors: ["Use as little as possible.", "Make the structure visible rather than the motion.", "When in doubt, leave it out."].map((t) => beh(t)) },
+      ],
+      results: { A: { p: PRESETS.A, verdict: null, preset: true }, B: { p: PRESETS.B, verdict: null, preset: true }, C: { p: PRESETS.C, verdict: null, preset: true } },
+      proposals: [],
+      log: [{ r: 0, t: "Example round loaded. These three readings are presets; press Perform for live ones." }],
+    };
+  }
+
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || defaults(); } catch { S = defaults(); }
+  if (!S || !Array.isArray(S.performers)) S = defaults();
+  for (const pf of S.performers) for (const b of pf.behaviors) { if (typeof b.since !== "number" || b.since > (S.round || 0)) b.since = -1; b.s = b.s || 0; }
+  if (!S.library) S.library = DEFAULT_LIBRARY();
+  if (!S.process) S.process = 1;
+  if (!Array.isArray(S.versions)) S.versions = [{ n: 1, score: S.score, library: clone(S.library), pinned: clone(S.pinned || []), open: clone(S.open || []) }];
+  if (!Array.isArray(S.variety)) S.variety = [];
+  if (!S.mode) S.mode = "machine";
+  if (!S.human) S.human = { img: null, notes: [] };
+  for (const id in S.results || {}) { const r = S.results[id]; if (r?.verdict === "keep") r.verdict = "closer"; if (r?.verdict === "miss") r.verdict = "off"; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+  const log = (t) => { S.log.unshift({ r: S.round, t }); S.log = S.log.slice(0, 80); };
+
+  // ---------- tiny DOM helper ----------
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else if (k === "class") el.className = v;
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : String(k));
+    return el;
+  }
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- interpretation clamp ----------
+  const num = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+  function normalize(p) {
+    p = p && typeof p === "object" ? p : {};
+    const sizeMin = num(p.sizeMin, 0.01, 0.4, 0.06);
+    return {
+      count: Math.round(num(p.count, 1, 200, 20)),
+      sizeMin, sizeMax: Math.max(sizeMin, num(p.sizeMax, 0.01, 0.4, 0.14)),
+      speed: num(p.speed, 0.1, 4, 1),
+      edges: p.edges === "wrap" ? "wrap" : "bounce",
+      turnOnTouch: p.turnOnTouch !== false, repelOverlap: p.repelOverlap !== false,
+      showCircles: ["none", "outline", "faint"].includes(p.showCircles) ? p.showCircles : "none",
+      lines: p.lines === "accumulate" ? "accumulate" : "instant",
+      lineWeight: num(p.lineWeight, 0.25, 3, 1),
+      lineTone: p.lineTone === "distance" ? "distance" : "ink",
+      ground: p.ground === "ink" ? "ink" : "paper",
+      fill: ["none", "flat", "gradient"].includes(p.fill) ? p.fill : "none",
+      gravity: num(p.gravity, 0, 0.3, 0),
+      gravityDir: ["down", "up", "left", "right"].includes(p.gravityDir) ? p.gravityDir : "down",
+      centerPull: num(p.centerPull, 0, 0.05, 0),
+      wander: num(p.wander, 0, 0.3, 0),
+      fillTone: num(p.fillTone, 0, 1, 0.5),
+      cannot: (Array.isArray(p.cannot) ? p.cannot : []).slice(0, 4).map((x) => String(x).slice(0, 140)).filter(Boolean),
+      notes: (Array.isArray(p.notes) ? p.notes : []).slice(0, 6)
+        .map((n) => ({ phrase: String(n?.phrase || "").trim().slice(0, 80), choice: String(n?.choice || "").trim().slice(0, 140), why: String(n?.why || "").trim().slice(0, 180) }))
+        .filter((n) => n.phrase && n.choice),
+    };
+  }
+  const summary = (p) => p.mode === "code" ? `own code · ${p.code.split("\n").length} lines` : `${p.count} el · Ø ${Math.round(p.sizeMin * 100)}–${Math.round(p.sizeMax * 100)}% · speed ${p.speed.toFixed(1)} · ${p.edges} · lines ${p.lines}${p.lineTone === "distance" ? " by distance" : ""} · circles ${p.showCircles} · B3 ${p.turnOnTouch ? "on" : "off"} · B4 ${p.repelOverlap ? "on" : "off"}${p.fill && p.fill !== "none" ? ` · fill ${p.fill}` : ""}${p.gravity ? ` · gravity ${p.gravity} ${p.gravityDir}` : ""}${p.centerPull ? ` · pull ${p.centerPull}` : ""}${p.wander ? ` · wander ${p.wander}` : ""}`;
+
+  // ---------- the drawing machine ----------
+  function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function Machine(canvas, id) {
+    const ctx = canvas.getContext("2d");
+    let P = null, els = [], over = [];
+    const colors = () => ({ paper: css("--paper") || "#f4f4ef", ink: css("--ink") || "#141414" });
+    function fit() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const px = Math.max(100, Math.round(canvas.clientWidth * dpr));
+      if (canvas.width !== px) { canvas.width = px; canvas.height = px; return true; }
+      return false;
+    }
+    function ground() {
+      const c = colors();
+      ctx.setTransform(canvas.width / W, 0, 0, canvas.width / W, 0, 0);
+      ctx.fillStyle = P.ground === "ink" ? c.ink : c.paper;
+      ctx.fillRect(0, 0, W, W);
+    }
+    function reset(p) {
+      P = p; fit();
+      const r = rng([...(id + S.round + S.score)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) | 0, 7));
+      els = Array.from({ length: P.count }, () => {
+        const rad = (P.sizeMin + r() * (P.sizeMax - P.sizeMin)) * W / 2;
+        return { x: rad + r() * (W - 2 * rad), y: rad + r() * (W - 2 * rad), r: rad, a: r() * Math.PI * 2, s: P.speed, turn: r() < 0.5 ? -1 : 1 };
+      });
+      ground();
+    }
+    function step() {
+      if (!P) return;
+      const G = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] }[P.gravityDir || "down"];
+      for (const e of els) {
+        if (P.gravity || P.centerPull || P.wander) {
+          let vx = Math.cos(e.a) * e.s, vy = Math.sin(e.a) * e.s;
+          vx += G[0] * (P.gravity || 0); vy += G[1] * (P.gravity || 0);
+          if (P.centerPull) { const dx = W / 2 - e.x, dy = W / 2 - e.y, d = Math.hypot(dx, dy) || 1; vx += dx / d * P.centerPull * 4; vy += dy / d * P.centerPull * 4; }
+          e.a = Math.atan2(vy, vx) + (P.wander ? (Math.random() - 0.5) * P.wander : 0);
+          e.s = Math.min(P.speed * 6, Math.hypot(vx, vy));
+          if (!P.gravity) e.s += (P.speed - e.s) * 0.05;
+        }
+        e.x += Math.cos(e.a) * e.s; e.y += Math.sin(e.a) * e.s;
+        if (P.edges === "wrap") { e.x = (e.x + W) % W; e.y = (e.y + W) % W; }
+        else {
+          if (e.x < e.r) { e.x = e.r; e.a = Math.PI - e.a; } else if (e.x > W - e.r) { e.x = W - e.r; e.a = Math.PI - e.a; }
+          if (e.y < e.r) { e.y = e.r; e.a = -e.a; } else if (e.y > W - e.r) { e.y = W - e.r; e.a = -e.a; }
+        }
+        e.t = false;
+      }
+      over = [];
+      for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
+        const a = els[i], b = els[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), rr = a.r + b.r;
+        if (d < rr && d > 0.001) {
+          over.push([a, b, d / rr]); a.t = b.t = true;
+          if (P.repelOverlap) { const push = (rr - d) * 0.015, nx = dx / d, ny = dy / d; a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push; }
+        }
+      }
+      if (P.turnOnTouch) for (const e of els) if (e.t) e.a += 0.02 * e.turn;
+    }
+    function draw() {
+      if (!P) return;
+      const c = colors(), fg = P.ground === "ink" ? c.paper : c.ink;
+      ctx.setTransform(canvas.width / W, 0, 0, canvas.width / W, 0, 0);
+      const live = P.lines === "instant";
+      if (live) ground();
+      if (P.fill && P.fill !== "none") {
+        const tone = Math.round(255 * (P.ground === "ink" ? P.fillTone : 1 - P.fillTone) * 0.85 + (P.ground === "ink" ? 0 : 20));
+        const g = `${tone},${tone},${tone}`;
+        ctx.globalAlpha = live ? 1 : 0.02;
+        for (const e of els) {
+          if (P.fill === "gradient") { const gr = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r); gr.addColorStop(0, `rgba(${g},0.9)`); gr.addColorStop(1, `rgba(${g},0)`); ctx.fillStyle = gr; }
+          else ctx.fillStyle = `rgba(${g},0.55)`;
+          ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      if (P.showCircles !== "none") {
+        ctx.strokeStyle = fg; ctx.lineWidth = 0.6;
+        ctx.globalAlpha = live ? (P.showCircles === "outline" ? 0.45 : 0.14) : (P.showCircles === "outline" ? 0.03 : 0.012);
+        for (const e of els) { ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.stroke(); }
+      }
+      ctx.lineWidth = P.lineWeight; ctx.strokeStyle = fg;
+      for (const [a, b, t] of over) {
+        const base = live ? 0.9 : 0.12;
+        ctx.globalAlpha = P.lineTone === "distance" ? base * (1 - t * 0.85) : base;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    function clear() { P = null; els = []; over = []; fit(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    return { reset, step, draw, fit, clear, get p() { return P; } };
+  }
+
+  // ---------- render ----------
+  const machines = {}, cache = {};
+  const stage = $("stage");
+  function renderStage() {
+    stage.replaceChildren();
+    for (const pf of S.performers) {
+      const res = S.results[pf.id];
+      let c = cache[pf.id];
+      if (!c) { const cv = h("canvas", { "aria-label": `Performance by ${pf.name}` }); c = cache[pf.id] = { canvas: cv, m: Machine(cv, pf.id), p: null }; }
+      const isCode = res?.p?.mode === "code";
+      let canvas = c.canvas;
+      if (isCode) {
+        let f = frames[pf.id];
+        if (!f || f.code !== res.p.code) {
+          const el = h("iframe", { class: "sk", sandbox: "allow-scripts", title: `Sketch by ${pf.name}` });
+          el.srcdoc = harness(pf.id, res.p.code, res.round || 1);
+          f = frames[pf.id] = { code: res.p.code, el };
+        }
+        canvas = f.el;
+      }
+      const status = h("div", { class: "status" + (res?.error ? " err" : ""), id: "st-" + pf.id },
+        res?.error ? res.error : res?.p ? summary(res.p) : "No performance yet.",
+        res?.p?.cannot?.length ? h("div", { class: "cannot" }, "Couldn't do: " + res.p.cannot.join("; ")) : null,
+        res?.runError ? h("div", { class: "cannot" }, "Sketch error: " + res.runError) : null);
+      const vbtn = (kind, label) => h("button", { class: `btn small ${kind}`, type: "button", "aria-pressed": String(res?.verdict === kind), disabled: !res?.p, onclick: () => setVerdict(pf.id, kind) }, label);
+      const input = h("input", { id: "add-" + pf.id, placeholder: "Add to this sensibility", "aria-label": `Add a behavior to ${pf.name}` });
+      const add = (all) => { const t = input.value.trim(); if (!t) return; if (all) giveAll(t); else { pf.behaviors.push(beh(t, S.round)); log(`${pf.id} ${pf.name}: added “${t}”`); } save(); renderAll(); };
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(false); });
+      stage.append(h("article", { class: "perf" },
+        h("div", { class: "perf-head" }, h("span", { class: "letter" }, pf.id), h("h3", {}, pf.name),
+          h("span", { class: "round" }, res?.preset ? "example" : res?.p ? `round ${res.round}` : "")),
+        canvas, status,
+        isCode ? h("details", { class: "code" }, h("summary", {}, "View code"), h("pre", {}, res.p.code)) : null,
+        h("div", { class: "verdict" }, vbtn("closer", "Closer"), vbtn("surprising", "Surprising"), vbtn("off", "Off")),
+        h("div", {}, h("p", { class: "label" }, h("span", {}, "Sensibility"), h("span", {}, "closer ★ off")),
+          h("ul", { class: "list beh" }, pf.behaviors.map((b) => h("li", {},
+            h("span", {}, b.text, (b.since ?? -1) >= (res?.round ?? 0) ? h("span", { class: "badge pending", title: "Added after this performance. It takes effect when you perform the next round." }, "next round") : null),
+            h("span", { class: "count", title: "Times this behavior was part of a performance marked Closer, Surprising or Off" }, h("span", { class: "u" }, "+" + b.up), " ", h("span", { class: "s" }, "★" + (b.s || 0)), " ", h("span", { class: "d" }, "−" + b.down),
+              h("button", { class: "toall", type: "button", title: "This is about how Elements act, not about this performer. Move it to the Library so every performance uses it.", onclick: () => toLibrary(b.text) }, "→ Library"),
+              S.performers.some((o) => !o.behaviors.some((x) => norm(x.text) === norm(b.text))) ? h("button", { class: "toall", type: "button", title: "Give this behavior to every performer", onclick: () => { giveAll(b.text); save(); renderAll(); } }, "→ all") : null),
+            h("button", { class: "x", type: "button", "aria-label": `Remove “${b.text}”`, onclick: () => { pf.behaviors = pf.behaviors.filter((x) => x.id !== b.id); log(`${pf.id} ${pf.name}: removed “${b.text}”`); save(); renderAll(); } }, "×"))))),
+        h("div", { class: "addb" }, input, h("button", { class: "btn small", type: "button", onclick: () => add(false) }, "Add"),
+          h("button", { class: "btn small", type: "button", title: "Add this behavior to every performer", onclick: () => add(true) }, "Add to all"))));
+      if (isCode) { delete machines[pf.id]; continue; }
+      machines[pf.id] = c.m;
+      const want = res?.p || null;
+      if (want !== c.p) { c.p = want; const m = c.m; requestAnimationFrame(() => { if (want) { m.reset(want); warm(m); } else { m.clear(); } }); }
+    }
+    if (S.withMe) stage.append(humanCard());
+  }
+
+  // ---------- the human performer ----------
+  let humanCanvas = null;
+  function humanCard() {
+    if (!humanCanvas) {
+      humanCanvas = h("canvas", { "aria-label": "Your performance. Draw with a mouse, pen or finger." });
+      const cx = humanCanvas.getContext("2d");
+      let drawing = false, last = null;
+      const pt = (e) => { const r = humanCanvas.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 600, (e.clientY - r.top) / r.height * 600]; };
+      humanCanvas.addEventListener("pointerdown", (e) => { drawing = true; last = pt(e); humanCanvas.setPointerCapture(e.pointerId); });
+      humanCanvas.addEventListener("pointermove", (e) => {
+        if (!drawing) return; const p = pt(e);
+        cx.strokeStyle = css("--ink") || "#141414"; cx.lineWidth = 1.6; cx.lineCap = "round"; cx.globalAlpha = 0.85;
+        cx.beginPath(); cx.moveTo(last[0], last[1]); cx.lineTo(p[0], p[1]); cx.stroke(); cx.globalAlpha = 1; last = p;
+      });
+      const end = () => { if (!drawing) return; drawing = false; try { S.human.img = humanCanvas.toDataURL("image/png"); } catch {} save(); };
+      humanCanvas.addEventListener("pointerup", end); humanCanvas.addEventListener("pointercancel", end);
+      paintHuman();
+    }
+    const w = h("input", { id: "h-words", placeholder: "Words from the score", "aria-label": "Words from the score" });
+    const r = h("input", { id: "h-reading", placeholder: "Your reading", "aria-label": "Your reading of those words" });
+    const add = () => { const phrase = w.value.trim(), choice = r.value.trim(); if (!phrase || !choice) return; S.human.notes.push({ phrase, choice, why: "" }); log(`You: “${phrase}” → ${choice}`); save(); renderAll(); };
+    r.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+    return h("article", { class: "perf you" },
+      h("div", { class: "perf-head" }, h("span", { class: "letter" }, "H"), h("h3", {}, "You"), h("span", { class: "round" }, "by hand")),
+      humanCanvas,
+      h("div", { class: "status" }, "Draw your own performance of the score. It stays a still image, like a print."),
+      h("div", { class: "row2" }, h("button", { class: "btn small", type: "button", onclick: () => { S.human.img = null; save(); paintHuman(); log("You cleared your drawing"); renderLog(); } }, "Clear drawing")),
+      h("div", {}, h("p", { class: "label" }, h("span", {}, "Your readings"), h("span", {}, "shown in Divergences")),
+        h("ul", { class: "list beh" }, S.human.notes.map((n, i) => h("li", {}, h("span", {}, h("q", {}, n.phrase), " → ", n.choice), h("span", {}),
+          h("button", { class: "x", type: "button", "aria-label": "Remove reading", onclick: () => { S.human.notes.splice(i, 1); save(); renderAll(); } }, "×"))))),
+      h("div", { class: "row2" }, w, r, h("button", { class: "btn small", type: "button", onclick: add }, "Add")));
+  }
+  function paintHuman() {
+    const cx = humanCanvas.getContext("2d");
+    humanCanvas.width = 600; humanCanvas.height = 600;
+    cx.fillStyle = css("--paper") || "#f4f4ef"; cx.fillRect(0, 0, 600, 600);
+    if (S.human.img) { const im = new Image(); im.onload = () => cx.drawImage(im, 0, 0, 600, 600); im.src = S.human.img; }
+  }
+
+  // ---------- sketches written by performers ----------
+  const frames = {};
+  function harness(id, code, seed) {
+    const safe = String(code).replace(/<\/script/gi, "<\\/script");
+    return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#f4f4ef;overflow:hidden}canvas{display:block;width:100%;height:100%}</style></head><body><canvas id="c" width="600" height="600"></canvas>
+<script>
+var __id=${JSON.stringify(id)};function __post(m){m.hp=1;m.id=__id;parent.postMessage(m,"*");}
+window.onerror=function(m,s,l){__post({type:"error",msg:String(m)+(l?" (line "+l+")":"")});return true;};
+var cv=document.getElementById("c"),ctx=cv.getContext("2d"),W=600,H=600,frame=0,__s=${Number(seed) * 9973 + id.charCodeAt(0)};
+function random(){__s=(__s*16807)%2147483647;return(__s-1)/2147483646;}
+var __play=true;addEventListener("message",function(e){var d=e.data||{};if(!d.hp)return;if(d.cmd==="play")__play=!!d.on;if(d.cmd==="snap"){var s=document.createElement("canvas");s.width=s.height=64;var x=s.getContext("2d");x.drawImage(cv,0,0,64,64);var px=x.getImageData(0,0,64,64).data,hh=[0,0,0,0,0,0,0,0];for(var i=0;i<px.length;i+=4){hh[Math.min(7,((px[i]+px[i+1]+px[i+2])/3)>>5)]++;}__post({type:"snap",hist:hh.map(function(v){return v/4096;})});}});
+<\/script>
+<script>
+${safe}
+<\/script>
+<script>
+try{if(typeof setup==="function")setup();}catch(e){__post({type:"error",msg:String(e&&e.message||e)});}
+(function loop(){if(__play){try{if(typeof draw==="function")draw();frame++;}catch(e){__post({type:"error",msg:String(e&&e.message||e)});return;}}requestAnimationFrame(loop);})();
+<\/script></body></html>`;
+  }
+  const snapWait = {};
+  addEventListener("message", (e) => {
+    const d = e.data;
+    if (!d || d.hp !== 1 || typeof d.id !== "string") return;
+    const f = frames[d.id]; if (!f || e.source !== f.el.contentWindow) return;
+    if (d.type === "error") {
+      const r = S.results[d.id]; if (!r || r.runError) return;
+      r.runError = String(d.msg).slice(0, 200); save();
+      const st = $("st-" + d.id); if (st) st.append(h("div", { class: "cannot" }, "Sketch error: " + r.runError));
+    }
+    if (d.type === "snap" && snapWait[d.id]) { snapWait[d.id](d.hist); delete snapWait[d.id]; }
+  });
+  function histOfCanvas(cv) {
+    const s = document.createElement("canvas"); s.width = s.height = 64; const x = s.getContext("2d"); x.drawImage(cv, 0, 0, 64, 64);
+    const px = x.getImageData(0, 0, 64, 64).data, hh = new Array(8).fill(0);
+    for (let i = 0; i < px.length; i += 4) hh[Math.min(7, ((px[i] + px[i + 1] + px[i + 2]) / 3) >> 5)]++;
+    return hh.map((v) => v / 4096);
+  }
+  function snapFrame(id) {
+    return new Promise((res) => { const f = frames[id]; if (!f) return res(null); snapWait[id] = res; f.el.contentWindow.postMessage({ hp: 1, cmd: "snap" }, "*"); setTimeout(() => { if (snapWait[id]) { delete snapWait[id]; res(null); } }, 1500); });
+  }
+  async function pixelVariety() {
+    const hs = (await Promise.all(S.performers.map((p) => snapFrame(p.id)))).filter(Boolean);
+    if (S.withMe && S.human.img && humanCanvas) hs.push(histOfCanvas(humanCanvas));
+    if (hs.length < 2) return null;
+    let t = 0, n = 0;
+    for (let i = 0; i < hs.length; i++) for (let j = i + 1; j < hs.length; j++) { t += hs[i].reduce((a, v, k) => a + Math.abs(v - hs[j][k]), 0) / 2; n++; }
+    return Math.round(t / n * 100);
+  }
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function warm(m) { if (reduce || !playing || m.p.lines === "accumulate") { for (let i = 0; i < 500; i++) { m.step(); if (m.p.lines === "accumulate") m.draw(); } m.draw(); } }
+
+  function renderScore() {
+    const sc = $("score"); if (document.activeElement !== sc) sc.value = S.score;
+    const pin = $("pinned"), op = $("open");
+    pin.replaceChildren(...(S.pinned.length ? S.pinned.map((x, i) => h("li", { class: "chip" },
+      h("span", {}, h("q", {}, x.phrase), " → ", x.text),
+      h("button", { class: "x", type: "button", "aria-label": "Unpin", onclick: () => { S.pinned.splice(i, 1); log(`Unpinned “${x.phrase}”`); save(); renderAll(); } }, "×")))
+      : [h("li", {}, h("p", { class: "empty" }, "Nothing pinned yet. Pin a reading from Divergences."))]));
+    op.replaceChildren(...(S.open.length ? S.open.map((x, i) => h("li", { class: "chip open" },
+      h("q", {}, x),
+      h("button", { class: "x", type: "button", "aria-label": "Remove", onclick: () => { S.open.splice(i, 1); log(`“${x}” no longer marked open`); save(); renderAll(); } }, "×")))
+      : [h("li", {}, h("p", { class: "empty" }, "Nothing marked open yet."))]));
+  }
+
+  const norm = (s) => s.toLowerCase().replace(/[“”"'.,]/g, "").trim();
+  function divergences() {
+    const rows = [];
+    const sources = [...S.performers.map((pf) => [pf.id, S.results[pf.id]?.p?.notes || []]), ...(S.withMe ? [["H", S.human.notes]] : [])];
+    for (const [pid, notes] of sources) for (const n of notes) {
+      const k = norm(n.phrase);
+      let row = rows.find((r) => r.k === k || r.k.includes(k) || k.includes(r.k));
+      if (!row) rows.push(row = { k, phrase: n.phrase, by: {} });
+      if (!row.by[pid]) row.by[pid] = n;
+    }
+    return rows.sort((a, b) => Object.keys(b.by).length - Object.keys(a.by).length);
+  }
+  function renderDiv() {
+    const t = $("div"), rows = divergences();
+    const cols = [...S.performers, ...(S.withMe ? [{ id: "H", name: "You" }] : [])];
+    const head = h("tr", {}, h("th", {}, "Words"), cols.map((p) => h("th", {}, `${p.id} ${p.name}`)), h("th", {}, ""));
+    const body = rows.map((r) => {
+      const pinned = S.pinned.some((x) => norm(x.phrase) === r.k), open = S.open.some((x) => norm(x) === r.k);
+      return h("tr", {},
+        h("td", { class: "phrase" }, "“" + r.phrase + "”", pinned ? h("div", {}, h("span", { class: "badge" }, "pinned")) : null, open ? h("div", {}, h("span", { class: "badge open" }, "open")) : null),
+        cols.map((p) => { const n = r.by[p.id]; return h("td", {}, n ? [h("div", {}, n.choice), n.why ? h("div", { class: "why" }, n.why) : null,
+          h("button", { class: "btn small pin", type: "button", title: "Write this reading into the score so every performer follows it", onclick: () => pinReading(r.phrase, n.choice, p.id) }, "Pin for all")] : h("span", { class: "why" }, "Did not mention")); }),
+        h("td", {}, h("button", { class: "btn small", type: "button", disabled: open, onclick: () => { S.open.push(r.phrase); log(`Marked “${r.phrase}” open on purpose`); save(); renderAll(); } }, "Leave open")));
+    });
+    t.replaceChildren(h("thead", {}, head), h("tbody", {}, body.length ? body : h("tr", {}, h("td", { colspan: cols.length + 2, class: "why" }, "No performances to compare yet."))));
+  }
+  function pinReading(phrase, choice, by) {
+    S.pinned = S.pinned.filter((x) => norm(x.phrase) !== norm(phrase));
+    S.open = S.open.filter((x) => norm(x) !== norm(phrase));
+    S.pinned.push({ phrase, text: choice, by });
+    log(`Pinned “${phrase}” → ${choice} (from ${by})`); save(); renderAll();
+  }
+
+  function renderProposals() {
+    const box = $("proposals");
+    box.replaceChildren(...S.proposals.map((pr, i) => {
+      if (pr.op === "library") return h("div", { class: "proposal" },
+        h("div", { class: "op" }, "Library · add a Behavior to Element 1"),
+        h("div", { class: "txt" }, pr.text), pr.why ? h("div", { class: "why note" }, pr.why) : null,
+        h("div", { class: "row" },
+          h("button", { class: "btn small primary", type: "button", onclick: () => { S.proposals.splice(i, 1); addLibBehavior(pr.text); } }, "Add to Library"),
+          h("button", { class: "btn small", type: "button", onclick: () => { S.proposals.splice(i, 1); log("Rejected a Library change"); save(); renderAll(); } }, "Reject")));
+      const pf = S.performers.find((p) => p.id === pr.performer);
+      const target = pf?.behaviors.find((b) => b.id === pr.target);
+      const opText = pr.op === "add" ? "Add behavior" : pr.op === "remove" ? `Remove “${target?.text ?? "?"}”` : `Replace “${target?.text ?? "?"}”`;
+      return h("div", { class: "proposal" },
+        h("div", { class: "op" }, `${pr.performer} ${pf?.name ?? ""} · ${opText}`),
+        pr.op !== "remove" ? h("div", { class: "txt" }, pr.text) : null,
+        pr.why ? h("div", { class: "why note" }, pr.why) : null,
+        h("div", { class: "row" },
+          h("button", { class: "btn small primary", type: "button", onclick: () => accept(i, false) }, `Accept for ${pr.performer}`),
+          pr.op !== "remove" ? h("button", { class: "btn small", type: "button", onclick: () => accept(i, true) }, "Accept for all") : null,
+          h("button", { class: "btn small", type: "button", onclick: () => { S.proposals.splice(i, 1); log(`Rejected a change for ${pr.performer}`); save(); renderAll(); } }, "Reject")));
+    }));
+  }
+  function giveAll(text) {
+    const got = [];
+    for (const o of S.performers) if (!o.behaviors.some((x) => norm(x.text) === norm(text))) { o.behaviors.push(beh(text, S.round)); got.push(o.id); }
+    log(got.length ? `Gave “${text}” to ${got.join(", ")}` : `Everyone already has “${text}”`);
+  }
+  function accept(i, all) {
+    const pr = S.proposals[i], pf = S.performers.find((p) => p.id === pr.performer);
+    if (pf && all && pr.op !== "remove") {
+      if (pr.op === "replace") { const b = pf.behaviors.find((b) => b.id === pr.target); if (b) { b.text = pr.text; b.up = 0; b.down = 0; b.since = S.round; } }
+      giveAll(pr.text);
+    } else if (pf) {
+      if (pr.op === "add") pf.behaviors.push(beh(pr.text, S.round));
+      else if (pr.op === "remove") pf.behaviors = pf.behaviors.filter((b) => b.id !== pr.target);
+      else { const b = pf.behaviors.find((b) => b.id === pr.target); if (b) { b.text = pr.text; b.up = 0; b.down = 0; b.since = S.round; } else pf.behaviors.push(beh(pr.text, S.round)); }
+      log(`${pf.id} ${pf.name}: accepted ${pr.op} “${pr.text || ""}”`.replace(" “”", ""));
+    }
+    S.proposals.splice(i, 1); save(); renderAll();
+  }
+
+  function renderGaps() {
+    const seen = new Map();
+    const gone = new Set(S.dismissed || []);
+    const addGap = (g) => { const k = g.toLowerCase(); if (!gone.has(k) && !seen.has(k)) seen.set(k, g); };
+    for (const g of S.gaps || []) addGap(g);
+    for (const pf of S.performers) for (const c of S.results[pf.id]?.p?.cannot || []) addGap(pf.id + ": " + c);
+    S.gaps = [...seen.values()].slice(-12);
+    $("gaps-sec").hidden = S.mode === "code";
+    $("copygaps").hidden = !S.gaps.length;
+    $("gaps").replaceChildren(...(S.gaps.length ? S.gaps.map((g, i) => h("li", { class: "chip open" }, h("span", {}, g),
+      h("button", { class: "x", type: "button", "aria-label": "Dismiss", onclick: () => { S.gaps.splice(i, 1); S.dismissed = [...(S.dismissed || []), g.toLowerCase()]; save(); renderGaps(); } }, "×")))
+      : [h("li", {}, h("p", { class: "empty" }, "Nothing yet. When a performer can't express a behavior, it is listed here so the machine can grow."))]));
+  }
+  function renderLibrary() {
+    const L = S.library, box = $("library");
+    const addIn = h("input", { id: "lib-add", placeholder: "Add a Behavior, e.g. Fall downward as if under gravity", "aria-label": "Add a Behavior to the Library" });
+    const add = () => { const t = addIn.value.trim(); if (t) { addLibBehavior(t); } };
+    addIn.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+    box.replaceChildren(
+      h("div", { class: "libitem" }, h("span", {}), h("span", { class: "n" }, "Form 1"), h("span", {}, "Circle"), h("span", {})),
+      ...L.behaviors.map((b) => h("div", { class: "libitem" },
+        h("input", { type: "checkbox", id: "use-" + b.n, checked: L.uses.includes(b.n), "aria-label": `Element 1 uses Behavior ${b.n}`, title: "Part of Element 1",
+          onchange: (e) => { L.uses = e.target.checked ? [...new Set([...L.uses, b.n])] : L.uses.filter((n) => n !== b.n); log(`Element 1 ${e.target.checked ? "now uses" : "no longer uses"} Behavior ${b.n}`); save(); renderAll(); } }),
+        h("span", { class: "n" }, "Behavior " + b.n), h("span", {}, b.text),
+        b.n > 4 ? h("button", { class: "x", type: "button", "aria-label": `Remove Behavior ${b.n}`, onclick: () => { L.behaviors = L.behaviors.filter((x) => x.n !== b.n); L.uses = L.uses.filter((n) => n !== b.n); log(`Removed Behavior ${b.n} from the Library`); save(); renderAll(); } }, "×") : h("span", {}))),
+      h("div", { class: "libel" }, h("b", {}, "Element 1"), " = Form 1", L.uses.slice().sort((a, b) => a - b).map((n) => " + B" + n).join("")),
+      h("div", { class: "addb", style: "margin-top:8px" }, addIn, h("button", { class: "btn small", type: "button", onclick: add }, "Add")));
+  }
+  function addLibBehavior(text) {
+    const L = S.library;
+    if (L.behaviors.some((b) => norm(b.text) === norm(text))) { log(`The Library already has “${text}”`); save(); renderAll(); return; }
+    const n = Math.max(0, ...L.behaviors.map((b) => b.n)) + 1;
+    L.behaviors.push({ n, text }); L.uses.push(n);
+    log(`Library: added Behavior ${n} “${text}” to Element 1`); save(); renderAll();
+  }
+  function toLibrary(text) {
+    for (const o of S.performers) o.behaviors = o.behaviors.filter((x) => norm(x.text) !== norm(text));
+    addLibBehavior(text);
+  }
+  function renderVersions() {
+    $("proc-label").textContent = `Process ${S.process}`;
+    const next = Math.max(...S.versions.map((v) => v.n)) + 1;
+    $("saveproc").textContent = `Save as Process ${next}`;
+    $("fold").disabled = !sample || !S.pinned.length;
+    $("versions").replaceChildren(h("span", { class: "note" }, "Versions"), ...S.versions.map((v) => h("button", { class: "vchip", type: "button", "aria-current": String(v.n === S.process), title: v.score,
+      onclick: () => { S.score = v.score; S.library = clone(v.library); S.pinned = clone(v.pinned); S.open = clone(v.open); S.process = v.n; log(`Returned to Process ${v.n}`); save(); $("score").value = S.score; renderAll(); } }, "P" + v.n)));
+    const fb = $("foldbox");
+    if (!S.foldDraft) { fb.replaceChildren(); return; }
+    fb.replaceChildren(h("div", { class: "fold" },
+      h("div", { class: "note" }, "Rewritten score with the pins folded in"),
+      h("div", { class: "new" }, S.foldDraft),
+      h("div", { class: "row score-actions" },
+        h("button", { class: "btn small primary", type: "button", onclick: () => { S.score = S.foldDraft; S.pinned = []; S.foldDraft = null; $("score").value = S.score; saveProcess("Folded pins into the text"); } }, `Accept as Process ${next}`),
+        h("button", { class: "btn small", type: "button", onclick: () => { S.foldDraft = null; save(); renderAll(); } }, "Discard"))));
+  }
+  function saveProcess(why) {
+    const n = Math.max(...S.versions.map((v) => v.n)) + 1;
+    S.versions.push({ n, score: S.score, library: clone(S.library), pinned: clone(S.pinned), open: clone(S.open) });
+    S.process = n; log(`${why}: saved as Process ${n}`); save(); renderAll();
+  }
+  async function fold() {
+    if (!sample || !S.pinned.length) return;
+    const btn = $("fold"); btn.disabled = true; btn.textContent = "Rewriting…";
+    const prompt = `Rewrite this score so the pinned readings become part of its prose. Keep it short, in the plain descriptive voice of Casey Reas's Process texts. Keep words marked open as open: do not make them more specific. Do not add anything that is not in the score or the pins.
+
+${scoreBlock()}
+
+Reply with only JSON: {"text":"the rewritten score"}`;
+    try { const out = await askJson(prompt, { cache: false }); const t = String(out?.text || "").trim(); if (t) { S.foldDraft = t; log("Drafted a rewrite with the pins folded in"); } }
+    catch (e) { log("Could not rewrite: " + errCopy(e)); }
+    btn.textContent = "Fold pins into text"; save(); renderAll();
+  }
+  function variety() {
+    const ps = S.performers.map((p) => S.results[p.id]?.p).filter(Boolean);
+    if (ps.some((p) => p.mode === "code")) return S.varietyNow ?? null;
+    if (ps.length < 2) return null;
+    const cats = ["edges", "showCircles", "lines", "lineTone", "ground", "fill", "turnOnTouch", "repelOverlap"];
+    const nums = [["count", 200], ["sizeMin", 0.4], ["sizeMax", 0.4], ["speed", 4], ["lineWeight", 3], ["gravity", 0.3], ["wander", 0.3]];
+    let total = 0, pairs = 0;
+    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+      let d = 0;
+      for (const c of cats) d += (ps[i][c] ?? null) === (ps[j][c] ?? null) ? 0 : 1;
+      for (const [k, max] of nums) d += Math.min(1, Math.abs((ps[i][k] || 0) - (ps[j][k] || 0)) / max * 3);
+      total += d / (cats.length + nums.length); pairs++;
+    }
+    return Math.round(total / pairs * 100);
+  }
+  function renderVariety() {
+    const v = variety(), box = $("variety");
+    if (v == null) { box.replaceChildren(); return; }
+    box.replaceChildren(...[h("span", {}, "Variety between performances"), h("span", { class: "vbar", role: "img", "aria-label": v + "%" }, h("i", { style: `width:${v}%` })), h("span", {}, v + "%"),
+      S.variety.length ? h("span", {}, "by round: " + S.variety.map((x) => `R${x.r} ${x.v}%`).join(" · ")) : null,
+      h("span", {}, "Pinning and tuning usually lower this.")].filter(Boolean));
+  }
+  function renderLog() { $("log").replaceChildren(...S.log.map((l) => h("li", {}, h("span", { class: "r" }, "R" + l.r), h("span", {}, l.t)))); }
+  function renderControls() { $("perform").textContent = `Perform round ${S.round + 1}`; $("intent").value = S.intent || ""; }
+  function renderAll() { renderGaps(); renderLibrary(); renderVersions(); renderVariety(); renderScore(); renderStage(); renderDiv(); renderProposals(); renderLog(); renderControls(); }
+
+  function setVerdict(id, kind) {
+    const res = S.results[id], pf = S.performers.find((p) => p.id === id);
+    if (!res?.p) return;
+    const prev = res.verdict, next = prev === kind ? null : kind;
+    const key = { closer: "up", surprising: "s", off: "down" };
+    for (const b of pf.behaviors) { if (prev) b[key[prev]] = Math.max(0, (b[key[prev]] || 0) - 1); if (next) b[key[next]] = (b[key[next]] || 0) + 1; }
+    res.verdict = next;
+    if (next) log(`${id} ${pf.name}: marked ${next}`);
+    save(); renderAll();
+  }
+
+  // ---------- Claude ----------
+  let sample = null;
+  const PARAMS = `count: integer 1-200
+sizeMin, sizeMax: circle diameter as a fraction of the surface width, 0.01-0.4
+speed: distance moved per step on a 600-unit surface, 0.1-4
+edges: "bounce" or "wrap"
+turnOnTouch: true/false (Behavior 3)
+repelOverlap: true/false (Behavior 4)
+showCircles: "none", "outline" or "faint"
+lines: "instant" (redrawn each frame) or "accumulate" (lines build up into a drawing)
+lineWeight: 0.25-3
+lineTone: "ink" (one value) or "distance" (lighter when centers are far apart)
+ground: "paper" (light) or "ink" (dark)
+fill: "none", "flat" or "gradient" (circles filled grey; gradient fades from center to edge)
+fillTone: 0-1, how dark the fill is (0 = ground, 1 = full ink)
+gravity: 0-0.3, a steady pull added every step (0 = none)
+gravityDir: "down", "up", "left" or "right"
+centerPull: 0-0.05, steer Elements toward the middle of the surface
+wander: 0-0.3, random change of direction each step
+cannot: list of your behaviors this machine cannot express (empty if none)`;
+  function scoreBlock() {
+    let s = "SCORE\n" + S.score.trim();
+    if (S.pinned.length) s += "\n\nPINNED BY THE AUTHOR (follow exactly)\n" + S.pinned.map((x) => `- "${x.phrase}" means: ${x.text}`).join("\n");
+    if (S.open.length) s += "\n\nLEFT OPEN ON PURPOSE (interpret freely)\n" + S.open.map((x) => `- "${x}"`).join("\n");
+    return s;
+  }
+  function performerPrompt(pf) {
+    return `You are Performer ${pf.id} ("${pf.name}"), one of three performers who each interpret the same score on their own, the way three artists separately implemented Casey Reas's Software Structures. You have not seen the other performances.
+
+${scoreBlock()}
+
+LIBRARY (how the Elements act; Element 1 uses only the Behaviors listed in its line, and you must follow them)
+${libraryText(S.library)}
+
+YOUR SENSIBILITY AS A PERFORMER (how you interpret, not how the Elements act)
+${pf.behaviors.map((b) => "- " + b.text).join("\n") || "- (none)"}
+
+THE DRAWING MACHINE YOU CONTROL
+A square surface runs the Elements step by step. You set these parameters:
+${PARAMS}
+
+Decide every parameter. Where the score is vague, decide using your behaviors. Where a behavior conflicts with the score or with another behavior, choose and say so in a note. If a Library Behavior or a sensibility asks for something the machine cannot do, list it in "cannot". Report 3 to 5 places where you had to interpret the score; in "phrase" quote the exact words from the score.
+
+Reply with only JSON in this shape:
+{"count":20,"sizeMin":0.06,"sizeMax":0.14,"speed":1,"edges":"bounce","turnOnTouch":true,"repelOverlap":true,"showCircles":"none","lines":"instant","lineWeight":1,"lineTone":"ink","ground":"paper","fill":"none","fillTone":0.5,"gravity":0,"gravityDir":"down","centerPull":0,"wander":0,"cannot":[],"notes":[{"phrase":"exact words","choice":"what you decided, under 12 words","why":"one short reason"}]}`;
+  }
+
+  function codePrompt(pf) {
+    return `You are Performer ${pf.id} ("${pf.name}"), one of three performers who each implement the same score on their own, the way Jared Tarbell, Robert Hodgin and William Ngan each wrote their own software for Casey Reas's Software Structure #003. You have not seen the other performances. Implementing the score in code is itself an act of interpretation: make the choices the text leaves open.
+
+${scoreBlock()}
+
+LIBRARY (how the Elements act; Element 1 uses only the Behaviors listed in its line, and you must implement them)
+${libraryText(S.library)}
+
+YOUR SENSIBILITY AS A PERFORMER (how you interpret, not how the Elements act)
+${pf.behaviors.map((b) => "- " + b.text).join("\n") || "- (none)"}
+
+YOUR MATERIAL
+A 600 x 600 canvas. Your code runs in a sandbox with these globals: ctx (a CanvasRenderingContext2D), W and H (both 600), frame (the frame number, starting at 0) and random() (seeded, returns 0-1). Define function setup(), which runs once, and function draw(), which runs about 60 times a second. Nothing else exists: no libraries, no DOM, no network, no images. You implement the Elements and their Behaviors yourself. Paint the background yourself. Keep it under 120 lines, keep it fast, and make sure it runs without errors.
+
+Reply in exactly two parts:
+1. A \`\`\`js code block with your code.
+2. A \`\`\`json code block: {"notes":[{"phrase":"exact words from the score","choice":"what you decided, under 12 words","why":"one short reason"}]} with 3 to 5 notes about where you had to interpret the score.`;
+  }
+  function parseSketch(text) {
+    const code = (String(text).match(/```(?:js|javascript)?\s*\n([\s\S]*?)```/) || [])[1];
+    if (!code || !/function\s+draw\s*\(/.test(code)) throw { code: "invalid_json", message: "no sketch" };
+    let notes = [];
+    const j = String(text).match(/```json\s*([\s\S]*?)```/);
+    if (j) { try { notes = normalize({ notes: JSON.parse(j[1]).notes }).notes; } catch {} }
+    return { mode: "code", code: code.trim().slice(0, 20000), notes, cannot: [] };
+  }
+  async function perform() {
+    if (!sample) return;
+    const btn = $("perform"); btn.disabled = true;
+    S.round += 1; const round = S.round;
+    S.proposals = [];
+    log(`Round ${round} started`);
+    for (const pf of S.performers) S.results[pf.id] = { p: null, verdict: null, round };
+    renderAll();
+    for (const pf of S.performers) $("st-" + pf.id).textContent = S.mode === "code" ? "Writing its own code… this can take a minute." : "Reading the score…";
+    await Promise.all(S.performers.map(async (pf) => {
+      try {
+        if (S.mode === "code") {
+          const { text } = await sample(codePrompt(pf), { cache: false });
+          S.results[pf.id] = { p: parseSketch(text), verdict: null, round };
+          save(); const st = $("st-" + pf.id); if (st) st.textContent = "Done.";
+          return;
+        }
+        const raw = await askJson(performerPrompt(pf), { modelTier: "quick", cache: false });
+        const np = normalize(raw);
+        if (!S.library.uses.includes(3)) np.turnOnTouch = false;
+        if (!S.library.uses.includes(4)) np.repelOverlap = false;
+        S.results[pf.id] = { p: np, verdict: null, round };
+      } catch (e) {
+        S.results[pf.id] = { p: null, verdict: null, round, error: errCopy(e) };
+      }
+      save();
+      const st = $("st-" + pf.id);
+      if (st) { const r = S.results[pf.id]; st.textContent = r.error || "Done."; }
+    }));
+    S.varietyNow = null;
+    if (S.mode === "code") { renderAll(); await new Promise((r) => setTimeout(r, 2500)); S.varietyNow = await pixelVariety(); }
+    const v = variety(); if (v != null) { S.variety.push({ r: round, v }); S.variety = S.variety.slice(-8); }
+    log(`Round ${round} performed`);
+    save(); renderAll(); btn.disabled = false;
+  }
+
+  async function propose() {
+    if (!sample) return;
+    const btn = $("propose"); btn.disabled = true; const old = btn.textContent; btn.textContent = "Thinking…";
+    S.intent = $("intent").value.trim(); save();
+    const perfs = S.performers.map((pf) => {
+      const r = S.results[pf.id];
+      return `Performer ${pf.id} "${pf.name}"
+Sensibility (id: text [closer/surprising/off]):
+${pf.behaviors.map((b) => `- ${b.id}: ${b.text} [+${b.up}/★${b.s || 0}/-${b.down}]`).join("\n") || "- none"}
+Reading: ${r?.p ? summary(r.p) : "none"}
+Interpretations: ${(r?.p?.notes || []).map((n) => `"${n.phrase}" -> ${n.choice}`).join("; ") || "none"}
+Author's verdict: ${r?.verdict || "none"}`;
+    }).join("\n\n");
+    const prompt = `You help an author tune a Reas-style Process. There are two layers:
+- The LIBRARY says how the Elements act (Behaviors such as "Move in a straight line"). It belongs to the score and every performer follows it.
+- Each PERFORMER has a sensibility: a few short rules about how it interprets (for example "Give the Elements a sense of life").
+
+Verdicts: "closer" means it matched what the author meant; "surprising" means unexpected and worth keeping, so protect what made it surprising; "off" means it missed.
+
+Propose at most one change per performer, plus at most one Library change. If what the author wants is about how the Elements act, propose it as a Library change (op "library"), not as a performer change. Keep the performers' sensibilities distinct from each other; do not make them alike. Leave a performer alone if nothing suggests a change. Keep each rule under 14 words.
+
+${scoreBlock()}
+
+LIBRARY
+${libraryText(S.library)}
+
+WHAT THE AUTHOR MEANT
+${S.intent || "(not stated)"}
+
+PERFORMERS
+${perfs}
+
+Reply with only JSON:
+{"proposals":[{"performer":"A","op":"add|replace|remove","target":"behavior id for replace/remove, else null","text":"new rule text (empty for remove)","why":"one short reason"},{"performer":"library","op":"library","target":null,"text":"new Library Behavior","why":"one short reason"}]}`;
+    try {
+      const out = await askJson(prompt, { cache: false });
+      const list = Array.isArray(out?.proposals) ? out.proposals : [];
+      S.proposals = list.filter((p) => (p?.op === "library" && p?.text) || (S.performers.some((x) => x.id === p?.performer) && ["add", "replace", "remove"].includes(p?.op)))
+        .map((p) => ({ performer: p.performer, op: p.op, target: p.target || null, text: String(p.text || "").slice(0, 160), why: String(p.why || "").slice(0, 200) }));
+      log(S.proposals.length ? `${S.proposals.length} behavior change(s) proposed` : "No behavior changes proposed");
+    } catch (e) { log("Could not get proposals: " + errCopy(e)); }
+    save(); renderAll(); btn.disabled = false; btn.textContent = old;
+  }
+
+  function parseLoose(t) {
+    t = String(t || "");
+    const f = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (f) t = f[1];
+    const a = t.indexOf("{"), b = t.lastIndexOf("}");
+    if (a < 0 || b <= a) throw { code: "invalid_json", message: "no JSON object" };
+    return JSON.parse(t.slice(a, b + 1));
+  }
+  async function askJson(prompt, opts) {
+    try {
+      if (typeof sample.json === "function") return await sample.json(prompt, opts);
+    } catch (e) {
+      if (e?.code === "invalid_json" && e.text) return parseLoose(e.text);
+      if (e?.code !== "capability_removed") throw e;
+    }
+    const { text } = await sample(prompt, opts);
+    return parseLoose(text);
+  }
+  function errCopy(e) {
+    console.warn("Claude call failed", e);
+    return errText(e) + (e?.code ? ` (${e.code})` : "");
+  }
+  function errText(e) {
+    switch (e?.code) {
+      case "not_granted": case "sampling_disabled": case "not_declared": return "Claude isn't available to this page for you.";
+      case "rate_limited": return "Too many requests. Wait a minute and try again.";
+      case "invalid_json": return "The answer wasn't readable. Try again.";
+      case "refused": return "Claude declined this score. Try different wording.";
+      case "cancelled": return "Stopped.";
+      default: return "Something went wrong. Try again.";
+    }
+  }
+
+  // ---------- wiring ----------
+  let playing = !reduce;
+  $("play").textContent = playing ? "Pause" : "Play"; $("play").setAttribute("aria-pressed", String(playing));
+  $("play").onclick = () => { playing = !playing; $("play").textContent = playing ? "Pause" : "Play"; $("play").setAttribute("aria-pressed", String(playing));
+    for (const id in frames) frames[id].el.contentWindow?.postMessage({ hp: 1, cmd: "play", on: playing }, "*"); };
+  $("copygaps").onclick = async () => {
+    const text = "Please extend the Hello, Process drawing machine so performers can express these behaviors:\n" + S.gaps.map((g) => "- " + g).join("\n");
+    try { await navigator.clipboard.writeText(text); $("copynote").textContent = "Copied. Paste it into your chat with Claude."; }
+    catch { $("copynote").textContent = "Copy didn't work here. Select the list above and copy it by hand."; }
+  };
+  const renderMode = () => { $("mode-machine").setAttribute("aria-pressed", String(S.mode === "machine")); $("mode-code").setAttribute("aria-pressed", String(S.mode === "code")); };
+  $("mode-machine").onclick = () => { S.mode = "machine"; log("Performers will set the machine"); save(); renderMode(); renderAll(); };
+  $("mode-code").onclick = () => { S.mode = "code"; log("Performers will write their own code"); save(); renderMode(); renderAll(); };
+  renderMode();
+  const renderMe = () => { $("withme").setAttribute("aria-pressed", String(!!S.withMe)); $("withme").textContent = S.withMe ? "Including me" : "Include me"; };
+  $("withme").onclick = () => { S.withMe = !S.withMe; log(S.withMe ? "You joined as a performer" : "You left the performers; your drawing and readings are kept"); save(); renderMe(); renderAll(); };
+  renderMe();
+  let armed = false;
+  $("reset").onclick = () => {
+    if (!armed) { armed = true; $("reset").textContent = "Click again to reset"; setTimeout(() => { armed = false; $("reset").textContent = "Reset"; }, 3000); return; }
+    S = defaults(); for (const k in cache) cache[k].p = undefined; for (const k in frames) delete frames[k]; save(); renderMode(); renderMe(); if (humanCanvas) paintHuman(); armed = false; $("reset").textContent = "Reset"; renderAll();
+  };
+  $("score").addEventListener("input", (e) => { S.score = e.target.value; save(); });
+  $("score").addEventListener("change", () => { log("Score edited"); save(); renderLog(); });
+  $("intent").addEventListener("input", (e) => { S.intent = e.target.value; save(); });
+  $("perform").onclick = perform;
+  $("propose").onclick = propose;
+  $("fold").onclick = fold;
+  $("saveproc").onclick = () => saveProcess("Saved the current score");
+
+  function frame() {
+    if (playing) for (const id in machines) { const m = machines[id]; m.step(); m.draw(); }
+    requestAnimationFrame(frame);
+  }
+  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { for (const id in machines) { const m = machines[id]; if (m.p && m.fit()) { m.reset(m.p); warm(m); } } }, 200); });
+
+  renderAll();
+  requestAnimationFrame(frame);
+
+  const setLive = (ok) => {
+    $("perform").disabled = !ok; $("propose").disabled = !ok; $("fold").disabled = !ok || !S.pinned.length;
+    $("live-note").textContent = ok
+      ? "Live: each performer is a separate Claude call that sees only the score, the Library and its own behaviors. Calls use your Claude account."
+      : "Live performances need this page open in Claude. You can still edit the score, pin readings and tune behaviors by hand.";
+  };
+  setLive(false); $("live-note").textContent = "Checking whether live performances are available…";
+  (window.claude?.use ? window.claude.use("sample") : Promise.resolve(null)).then((s) => { sample = s; setLive(!!s); }).catch(() => setLive(false));
+})();
+</script>
+
+</body></html>

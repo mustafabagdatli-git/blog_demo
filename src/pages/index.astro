@@ -1,0 +1,42 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const posts = (await getCollection("posts")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const fmt = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+---
+<Base title="AI Experiments">
+  <section class="intro">
+    <h1>Experiments in building with agents</h1>
+    <p>
+      What I try when I build with AI agents, what happened, and where each result stops being true.
+      Some posts come with the experiment itself, so you can run it.
+    </p>
+  </section>
+
+  <ol class="posts">
+    {posts.map((p) => (
+      <li>
+        <a href={`${base}/posts/${p.id}/`}>
+          <span class="label">{fmt(p.data.date)}{p.data.experiment && " · runnable"}</span>
+          <span class="title">{p.data.title}</span>
+          <span class="desc">{p.data.description}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</Base>
+
+<style>
+  .intro h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+  .intro p { font-family: var(--f-read); font-size: 20px; line-height: 1.45; color: var(--muted); margin: 0 0 40px; text-wrap: pretty; }
+  .posts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .posts a {
+    display: grid; gap: 4px; padding: 16px; margin-inline: -16px; border-radius: 8px;
+    color: inherit; text-decoration: none;
+  }
+  .posts a:hover { background: var(--surface); }
+  .title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+  .desc { font-family: var(--f-read); font-size: 17px; color: var(--muted); }
+</style>
